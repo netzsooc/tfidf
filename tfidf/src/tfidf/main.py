@@ -7,20 +7,20 @@ Created on Jun 13, 2013
 from nltk.corpus import stopwords
 from nltk import PorterStemmer
 from tf_idf import tfidf
+from tf import ntf
+from idf import idf
 
 if __name__ == '__main__':
     stemmer = PorterStemmer()
     special_sw = [
                   "one", "two", "three", "four", "paper", "work", "present",
                   "elsevier", "springer", "berlin", "heidelberg", "published",
-                  "springer-verlag", "ieee", "acm", "Â©".lower(), "2013",
-                  "2012", "2011", "2010", "press", "authors", "rights",
-                  "reserved", "mexico", "abstract", "copyright", "ltd", "bv",
-                  "new", "york", "publishing", "limited", '#', '#17', ")",
-                  "(", "amp", "gt", "gt10", "gt109", "gt120", "and/or", "1",
-		  "2"]
+                  "springer-verlag", "ieee", "acm", "Â©".lower(), "press",
+                  "authors", "rights", "reserved", "mexico", "abstract",
+                  "copyright", "ltd", "bv", "new", "york", "publishing",
+                  "limited", "amp", "gt", "and/or", "lt", "le", "ge", "eq"]
     sw = stopwords.words("english") + special_sw
-    ignorelist = "!?.,;:_'\"#$&()"
+    ignorelist = "!?.,;:_'\"#$&()%/*+-0123456789[]<>=\\`Î²{}^”›†’�ˆž|"
     
     D = dict()
     W = dict()
@@ -29,31 +29,55 @@ if __name__ == '__main__':
         i = 1
         for line in abst:
             if line.strip():
-#                 temp_line = list()
                 D[i] = []
                 for word in line.strip().split():
                     word = word.lower().translate(None, ignorelist)
-                    if word in sw:
-                        continue
                     if word:
-                        W.setdefault(word, []).append(i)
+                        if word in sw:
+                            continue
+                        if len(word) < 4:
+                            continue
+                        word = stemmer.stem(word)
+                        W.setdefault(word, {}).setdefault(i, 0)
+                        W[word][i] += 1
                         D[i].append(word)
                 i += 1
 
+    inmutfable = W.copy()
     W_ = sorted(W.keys())
-    keys_ = sorted(D.keys())
-    tfmatrix = [["Term"] + [k for k in keys_]]
-
-    for term in W_[:10]:
+    W = dict()
+    #IDFS = dict()
+    D_ = sorted(D.keys())
+    #print D
+    print ["TERM"] + [d for d in D_]
+    for term in W_:
+        #W[term] = dict()
         temp = [term]
+        #IDFS[term] = idf(term, D)
 
-        for k in keys_[:20]:
-	    d = D[k]
-	    tf = d.count(term)
-	    temp.append(tf)
+        for di in D_:
+            if not di in inmutfable[term]:
+                temp.append(0)
+            else:
+                t = inmutfable[term][di]
+                temp.append(ntf(t, di, W=inmutfable, D=D) * idf(term, D))
 
-        tfmatrix.append(temp)
-     
-    #print ("W =", len(W), "W =", len(secondW))
-    for r in tfidfmatrix[:20]:
-        print r
+        print temp
+        #for di in inmutfable[term]:
+            #t = inmutfable[term][di]
+            #print inmutfable[term][di]
+            #W[term][di] = ntf(t, di, W=inmutfable, D=D) * idf(term, D)
+    
+    #matrixtfidf = [["TERM"] + [d for d in D_]]
+##    print ["TERM"] + [d for d in D_]
+#    for t in W_:
+#        temp = [w]
+#        for di in D_:
+#            if not di in W[w]:
+#                temp.append(0)
+#                continue
+#            temp.append(W[t][di])
+#        print temp
+#        
+#    #for line in matrixtfidf:
+#        #print line

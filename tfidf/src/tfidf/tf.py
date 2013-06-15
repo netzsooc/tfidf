@@ -10,18 +10,34 @@ Created on Jun 13, 2013
 def tf(t, d):
     #d is a list of words in a document and not in stoplist
     #t is the term looked
-    return d.count(t)
+    return float(d.count(t))
 
 
-def maxtf(d):
+def maxtf(d, W, D):
     #d is a list of words in a document and not in stoplist
     #t is the term looked
-    temp = sorted([(tf(t, d), t) for t in d], reverse=True)
-    return temp[0][0]
+    if W:
+        if D:
+            temp = []
+            for t in D[d]:
+                temp.append(W[t][d])
+        else:
+            print "Error, Missing dictionary"
+            quit()
+
+    else:
+        temp = [tf(t, d) for t in d]
+    #print(temp)
+    return float(max(temp))
     
 
-def ntf(t, d, a=0.4):
-    #d is a list of words in a document and not in stoplist
+def ntf(t, d, a=0.4, W=None, D=None):
+    #d is a list of values of terms
     #t is the term looked
     #a is a number thus 0 <= a <= 1
-    return a + (1 - a) * (tf(t, d) / maxtf(d))
+    
+    if type(t) == str:
+        t = tf(t, d)
+    
+    #print type(maxtf(d,W))
+    return a + (1 - a) * (float(t) / maxtf(d, W, D))
